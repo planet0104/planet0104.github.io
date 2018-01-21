@@ -1,0 +1,425 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+<meta charset="utf-8">
+<title>太空之外</title>
+<style>
+#canvas{
+  border:solid 2px #375;
+  border-radius:10px;
+}
+html,body{ margin:0; }
+body{ user-select: none; }
+.button{ position:absolute; background: #eee; }
+.button.fire{ left:0pt;bottom:10pt; padding: 10pt; }
+.button.l{ right:40pt;bottom:10pt; padding: 10pt; }
+.button.r{ right:0pt;bottom:10pt; padding: 10pt; }
+</style>
+<script src="game.js"></script>
+<script src="sprite.js"></script>
+<script src="game_engine.js"></script>
+<script src="spaceOut\alienSprite.js"></script>
+
+</head>
+<body onload="resizeCanvas(GAME_WIDTH, GAME_HEIGHT)" onresize="resizeCanvas(GAME_WIDTH, GAME_HEIGHT)">
+<canvas onclick="handleEnterKey()" width="500" height="450" id="canvas"></canvas>
+<div onclick="if(!demo) driveLeft()" class="button l">&nbsp;左&nbsp;</div>
+<div onclick="if(!demo) driveRight()" class="button r">&nbsp;右&nbsp;</div>
+<div onclick="if(!demo) launchMissile()" class="button fire">开火</div>
+<script>
+
+var canvas = document.getElementById('canvas'),
+          context = canvas.getContext('2d');
+
+context.font = '20px Arial white'; 
+context.fillStyle = "#000";
+
+var GAME_WIDTH = canvas.width, GAME_HEIGHT=canvas.height, game, gameOver = true;
+var offscreenBitmap, desertBitmap, carBitmap, smCarBitmap, missileBitmap,
+    blobboBitmap, bMissileBitmap, jellyBitmap, jMissileBitmap, timmyBitmap, tMissileBitmap,
+    smExplosionBitmap, lgExplosionBitmap, gameOverBitmap,
+    splashBitmap,
+    oggBMissile,
+    oggGameOver,
+    oggJMissile,
+    oggLgExplode,
+    oggMissile,
+    oggSmExplode,
+    oggTMissile,
+    mp3Music,
+    background, carSprite,
+    fireInputDelay = 0, numLives, score, demo = true, gameOverDelay = 0,
+    difficulty;
+var backgroundMusicHandler;
+
+//初始化游戏
+function gameInitialize(){
+  game = new GameEngine(context, GAME_WIDTH, GAME_HEIGHT);
+  game.fps = 30;
+  game.initialize();
+
+  loadResources({
+    'pngSplash': 'spaceOut/Splash.png',
+    'pngDesert': 'spaceOut/Desert.png',
+    'pngCar': 'spaceOut/Car.png',
+    'pngSmCar': 'spaceOut/SmCar.png',
+    'pngMissile': 'spaceOut/Missile.png',
+    'pngJelly': 'spaceOut/Jelly.png',
+    'pngJMissile': 'spaceOut/JMissile.png',
+    'pngBlobbo': 'spaceOut/Blobbo.png',
+    'pngBMissile': 'spaceOut/BMissile.png',
+    'pngTimmy': 'spaceOut/Timmy.png',
+    'pngTMissile': 'spaceOut/TMissile.png',
+    'pngSmExplosion': 'spaceOut/SmExplosion.png',
+    'pngLgExplosion': 'spaceOut/LgExplosion.png',
+    'pngGameOver': 'spaceOut/GameOver.png',
+    'oggBMissile': 'spaceOut/BMissile.ogg',
+    'oggGameOver': 'spaceOut/GameOver.ogg',
+    'oggJMissile': 'spaceOut/JMissile.ogg',
+    'oggLgExplode': 'spaceOut/LgExplode.ogg',
+    'oggMissile': 'spaceOut/Missile.ogg',
+    'oggSmExplode': 'spaceOut/SmExplode.ogg',
+    'oggTMissile': 'spaceOut/TMissile.ogg',
+    'mp3Music': 'spaceOut/Music.mp3',
+  }, gameStart);
+}
+
+//开始游戏
+function gameStart(res){
+  //图片
+  splashBitmap = res.pngSplash;
+  desertBitmap = res.pngDesert;
+  carBitmap = res.pngCar;
+  smCarBitmap = res.pngSmCar;
+  missileBitmap = res.pngMissile;
+  blobboBitmap = res.pngBlobbo;
+  bMissileBitmap = res.pngBMissile;
+  jellyBitmap = res.pngJelly;
+  jMissileBitmap = res.pngJMissile;
+  timmyBitmap = res.pngTimmy;
+  tMissileBitmap = res.pngTMissile;
+  smExplosionBitmap = res.pngSmExplosion;
+  lgExplosionBitmap = res.pngLgExplosion;
+  gameOverBitmap = res.pngGameOver;
+  mp3Music = res.mp3Music;
+  oggMissile = res.oggMissile;
+  oggBMissile = res.oggBMissile;
+  oggSmExplode = res.oggSmExplode;
+  oggGameOver = res.oggGameOver;
+  oggJMissile = res.oggJMissile;
+  oggLgExplode = res.oggLgExplode;
+  oggTMissile = res.oggTMissile;
+
+  //创建布满星星的背景
+  background = new StarryBackground(GAME_WIDTH, GAME_HEIGHT);
+
+  newGame();
+}
+
+function newGame(){
+  //清空子画面
+  game.cleanupSprites();
+
+  //初始化游戏变量
+  fireInputDelay = 0;
+  score = 0;
+  numLives = 3;
+  difficulty = 80;
+  gameOver = false;
+
+  //创建汽车子画面
+  var bounds = new Rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  carSprite = new Sprite(carBitmap, bounds, BOUNDS_ACTION_WRAP);
+  carSprite.setPosition(220, 405);
+  game.addSprite(carSprite);
+
+  if(demo){
+    //向演示添加几个外星人
+    for(var i=0; i<6; i++)
+      addAlien();
+  }else{
+    backgroundMusicHandler = playSound(mp3Music, true);
+  }
+}
+
+function addAlien(){
+  //创建一个新的随机外星人子画面
+  var bounds = new Rect(0, 0, GAME_WIDTH, 410);
+  var sprite;
+  switch(Math.randInt(1, 3)){
+    case 1:
+      // Blobbo
+      sprite = new AlienSprite(blobboBitmap, bounds, BOUNDS_ACTION_BOUNCE);
+      sprite.setNumFrames(8);
+      sprite.setPosition(Math.randInt(0, 2) == 0 ? 0 : 600, Math.randInt(0, 370));
+      sprite.setVelocity(Math.randInt(0, 7) - 2, Math.randInt(0, 7) - 2);
+      break;
+    case 2:
+      // Jelly
+      sprite = new AlienSprite(jellyBitmap, bounds, BOUNDS_ACTION_BOUNCE);
+      sprite.setNumFrames(8);
+      sprite.setPosition(Math.randInt(0, 600), Math.randInt(0, 370));
+      sprite.setVelocity(Math.randInt(0, 5) - 2, Math.randInt(0, 5) - 3);
+      break;
+    case 3:
+      // Timmy
+      sprite = new AlienSprite(timmyBitmap, bounds, BOUNDS_ACTION_BOUNCE);
+      sprite.setNumFrames(8);
+      sprite.setPosition(Math.randInt(0, 600), Math.randInt(0, 370));
+      sprite.setVelocity(Math.randInt(0, 7) - 3, 0);
+      break;
+  }
+  //console.log("addAlien>>>", sprite);
+  //添加外星人子画面
+  game.addSprite(sprite);
+}
+
+function gameEnd(){
+}
+
+function gamePaint(context){
+  //绘制背景
+  background.draw();
+  //绘制沙漠位图
+  context.drawImage(desertBitmap, 0, 371);
+
+  //绘制子画面
+  game.drawSprites(context);
+
+  if(demo){
+    //绘制闪屏图像
+    context.drawImage(splashBitmap, 110, 100);
+  }else{
+    //绘制得分
+    context.fillStyle = '#fff';
+    context.fillText(score, 260, 30);
+    //绘制剩余生命(汽车)数
+    for(var i=0; i<numLives; i++){
+      context.drawImage(smCarBitmap, 420 + (smCarBitmap.width*i), 10);
+    }
+    //如有必要，绘制游戏结束消息
+    if(gameOver)
+      context.drawImage(gameOverBitmap, 110, 149);
+  }
+}
+
+function gameCycle(){
+  if(!gameOver){
+    if(!demo){
+      //随机添加外星人
+      if(Math.randInt(0, difficulty) == 0)
+        addAlien();
+    }else{
+      //随机移动车辆
+      if(Math.randInt(0, 3) == 0)
+        driveLeft();
+      if(Math.randInt(0, 7) == 0)
+        driveRight();
+      //随机发射导弹
+      if(Math.randInt(0, 15) == 0)
+        launchMissile();
+    }
+      
+    //更新背景
+    background.update();
+    //更新子画面
+    game.updateSprites();
+    gamePaint(context);
+  }else
+    if(--gameOverDelay == 0){
+      console.log('gameOverDelay==0');
+      //停止音乐并切换到演示模式
+      stopPlay(backgroundMusicHandler);
+      demo = true;
+      newGame();
+    }
+}
+
+/** 向左移动汽车 */
+function driveLeft(){
+  var velocity = carSprite.velocity;
+  velocity.x = Math.max(velocity.x - 1, -4);
+}
+
+/** 向右移动汽车 */
+function driveRight(){
+  var velocity = carSprite.velocity;
+  velocity.x = Math.min(velocity.x + 2, 6);
+}
+
+/** 发射导弹 */
+function launchMissile(){
+  if(++fireInputDelay > 1){
+    //创建一个新的导弹子画面
+    var bounds = new Rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    var pos = carSprite.position;
+    var sprite = new Sprite(missileBitmap, bounds, BOUNDS_ACTION_DIE);
+    sprite.setPosition(pos.left + 15, 400);
+    sprite.setVelocity(0, -7);
+    game.addSprite(sprite);
+    //播放导弹发射声音
+    if(!demo) playSound(oggMissile);
+    //重置输入延迟
+    fireInputDelay = 0;
+  }
+}
+
+function handleEnterKey(){
+  if(demo){
+    //退出演示模式，以便开始一个新游戏
+    demo = false;
+    newGame();
+  }else if(gameOver){
+    //开始一个新游戏
+    newGame();
+  }
+}
+
+document.addEventListener("keydown", function(e){
+  var keycode = e.keyCode;
+  if(keycode == VK_LEFT){
+    if(!demo) driveLeft();
+  }else if(keycode == VK_RIGHT){
+    if(!demo) driveRight();
+  }else if(keycode == VK_UP){    
+  }else if(keycode == VK_DOWN){    
+  }else if(keycode == VK_SPACE){
+    //按下空格键时发射导弹
+    if(!demo)  launchMissile();
+  }else if(keycode == VK_ENTER){
+    handleEnterKey();
+  }
+});
+
+canvas.addEventListener("mousedown", function(e){
+  //左键
+  if(e.button == 0){
+    
+  }
+},false);
+
+canvas.addEventListener("mousemove", function(e){
+  
+});
+
+
+function spriteCollision (spriteHitter, spriteHittee){
+  //查看玩家子弹是否与外星人相撞
+  var hitter = spriteHitter.bitmap;
+  var hittee = spriteHittee.bitmap;
+  if((hitter == missileBitmap && (hittee == blobboBitmap ||
+    hittee == jellyBitmap || hittee == timmyBitmap)) ||
+    (hittee == missileBitmap && (hitter == blobboBitmap ||
+  hitter == jellyBitmap || hitter == timmyBitmap))){
+    //播放较小的爆炸声音
+    if(!demo) playSound(oggLgExplode);
+
+    //删除这两个子画面
+    spriteHitter.kill();
+    spriteHittee.kill();
+
+    //在外星人的位置创建一个较大的爆炸子画面
+    var bounds = new Rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    var pos;
+    if(hitter == missileBitmap)
+      pos = spriteHittee.position;
+    else
+      pos = spriteHitter.position;
+    var sprite = new Sprite(lgExplosionBitmap, bounds);
+    sprite.setNumFrames(8, true);
+    sprite.setPosition(pos.left, pos.top);
+    game.addSprite(sprite);
+
+    if(demo){
+      //演示模式中，当消灭一个外星人时，立即添加一个新的外星人
+      addAlien();
+    }
+
+    //更新得分
+    score += 25;
+    difficulty = Math.max(80 - (score / 20), 20);
+  }
+  //查看外星人子弹是否与汽车相撞
+  if(!demo) //只有游戏没有处于演示模式时才执行测试
+  if((hitter == carBitmap && (hittee == bMissileBitmap ||
+    hittee == jMissileBitmap || hittee == tMissileBitmap)) ||
+    (hittee == carBitmap && (hitter == bMissileBitmap ||
+  hitter == jMissileBitmap || hitter == tMissileBitmap))){
+    //播放较大的爆炸声音
+    playSound(oggLgExplode);
+
+    //删除导弹子画面
+    if(hitter == carBitmap)
+      spriteHittee.kill();
+    else
+      spriteHitter.kill();
+    
+    //在汽车位置创建一个较大的爆炸子画面
+    var bounds = new Rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    var pos;
+    if(hitter == carBitmap)
+      pos = spriteHittee.position;
+    else
+      pos = spriteHitter.position;
+    var sprite = new Sprite(lgExplosionBitmap, bounds);
+    sprite.setNumFrames(8, true);
+    sprite.setPosition(pos.left, pos.top);
+    game.addSprite(sprite);
+
+    //将汽车移回开始位置
+    carSprite.setPosition(220, 405);
+
+    //查看游戏是否结束
+    if(--numLives == 0){
+      //播放游戏结束声音
+      playSound(oggGameOver);
+      gameOver = true;
+      gameOverDelay = 150;
+    }
+  }
+  return false;
+};
+
+function spriteDying(spriteDying){
+  //查看是否在删除外星人导弹子画面
+  if(spriteDying.bitmap == bMissileBitmap ||
+    spriteDying.bitmap == jMissileBitmap ||
+    spriteDying.bitmap == tMissileBitmap){
+      //播放较小的爆炸声音
+      if(!demo)
+        playSound(oggSmExplode);
+      //在导弹位置创建一个较小的爆炸子画面
+      var bounds = new Rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      var pos = spriteDying.position;
+      var sprite = new Sprite(smExplosionBitmap, bounds);
+      sprite.setNumFrames(8, true);
+      sprite.setPosition(pos.left, pos.top);
+      game.addSprite(sprite);
+    }
+}
+
+
+function start(){
+  gameInitialize();
+
+  //spriteHittee 被检测到与sprits组中碰撞的精灵
+  //spriteHitter 与被检测者发生碰撞的精灵
+  //reutrn 是否检测到碰撞(update方法中，碰撞以后将会恢复精灵位置，撞上小鸡游戏结束返回false通知update函数没有发生碰撞从而保留小鸡的位置)
+  game.spriteCollision = spriteCollision;
+  game.spriteDying = spriteDying;
+
+  var timer = new Timer(game.fps);
+  timer.start();
+  (function drawFrame () {
+      if (timer.readyForNextFrame()) {
+        gameCycle(); 
+      }
+      window.requestAnimationFrame(drawFrame, canvas);
+  }());
+};
+start();
+
+</script>
+</body>
+</html>
