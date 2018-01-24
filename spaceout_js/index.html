@@ -411,9 +411,16 @@ function start(){
 
   var timer = new Timer(game.fps);
   timer.start();
+  var start_time = Date.now();
   (function drawFrame () {
       if (timer.readyForNextFrame()) {
-        gameCycle(); 
+        gameCycle();
+        //显示帧率
+        /*
+        context.fillStyle = '#fff';
+        context.fillText('FPS:'+(1000/(Date.now()-start_time)), 20, 30);
+        start_time = Date.now();
+        */
       }
       window.requestAnimationFrame(drawFrame, canvas);
   }());
