@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>annrobot-node</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+</head>
+<body>
+<script>
+    var socket = new WebSocket("ws://annrobot-annrobot.193b.starter-ca-central-1.openshiftapps.com");
+	console.log("连接WebSocket服务器...");
+
+    socket.onopen = function(event) {
+      console.log("连接成功.");
+
+      socket.onmessage = function(event){
+        console.log("onmessage", event);
+      };
+
+      socket.onclose = function(event) {
+        console.log('Socket关闭.');
+      };
+    }
+  </script>
+</body>
+</html>
