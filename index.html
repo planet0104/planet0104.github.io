@@ -10,8 +10,57 @@
             body{
                 margin: 0;
                 padding: 0;
-                overflow: hidden;
                 background: #fdfdfd;
+            }
+            a img{
+               max-width: 100px;
+               max-height: 100px; 
+            }
+            h1{
+                color: #18bc9c;
+            }
+            .apps a{
+                width: 150px;
+                height: 140px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding-top: 15px;
+                overflow: hidden;
+                text-align: center;
+                vertical-align: middle;
+                background: #eee;
+                border-radius: 20px;
+                text-decoration-line: none;
+                color: #333;
+                display: inline-block;
+            }
+            .link{
+                font-size: 26px;
+                vertical-align: middle;
+                padding-left: 30pt;
+                padding-top: 10pt;
+                padding-bottom: 10pt;
+                text-align: left;
+            }
+            .link img{
+                width: 40px;
+                height: 40px;
+                vertical-align:middle;
+            }
+            .link a{
+                display: inline-block;
+                border-radius: 20px;
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                background: #eee;
+                /* border: solid 2px #777; */
+                text-decoration: none;
+                color: #333;
+            }
+            a:hover{
+                color: #33f;
             }
         </style>
     </head>
@@ -19,7 +68,6 @@
             <div style="max-width:650pt;width:100%;
             background: linear-gradient(to bottom right, #18bc9c, #18bc9c);
             display:inline-block;
-            margin-top:40pt;
             min-height:200pt;
             border:solid #18bc9c 1px;
             border-radius:0pt 0pt 0pt 0pt;
@@ -27,7 +75,7 @@
             color:white">
                 <img src="profile.png" style="border-radius:38pt;margin-top:24pt;width:76pt;height:76pt;" />
                 <div style="margin-top:25pt;font-size:20pt;"><b>创造有生命的代码</b></div>
-                <div style="margin-top:12pt;">fangte.site</div>
+                <div style="margin-top:12pt;">planet0104.github.io</div>
             </div>
             <div style="max-width:650pt;width:100%;
                         display:inline-block;
@@ -36,7 +84,15 @@
                         border-right:solid #ddd 1px;
                         padding-top:20pt;
                         padding-bottom:20pt;">
-                <h1><a href="jumpjumphelper.apk">下载微信跳一跳助手</a></h1>
+                <h1>开源APP</h1>
+                <div class="apps">
+                    <a href="jumpjumphelper.apk"><img src="images/jump.png" /><br/>微信跳一跳助手</a>
+                    <a href="https://github.com/planet0104/lazy_dict"><img src="images/lazy_dict.png" /><br/>懒人字典</a>
+                    <a href="https://github.com/planet0104/miniprogram-gifmaker"><img src="images/basicprofile.png" /><br/>GIF大头贴(小程序)</a>
+                </div>
+                <h1>我的文章</h1>
+                <div class="link"><a href="https://zhuanlan.zhihu.com/p/51035404"><img src="images/resolutions.png" />用Rust语言开发微信小程序</a></div>
+                <div class="link"><a href="https://zhuanlan.zhihu.com/p/33429607"><img src="images/resolutions.png" />模仿视网膜原理提取图像的边缘特征</a></div>
             </div>
 
     </body>
