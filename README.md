@@ -5,3 +5,5 @@
 [![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=planet0104&show_icons=true&theme=radical)](https://github.com/planet0104)
 [![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=planet0104&show_icons=true&theme=radical)](https://github.com/planet0104)
 
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=planet0104&repo=github-readme-stats)](https://github.com/planet0104/github-readme-stats)
+
