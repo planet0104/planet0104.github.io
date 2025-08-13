@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>第九章 - RecognizeIt v1.0</title>
+</head>
+<body style="height: 100%; margin: 0; overflow: hidden;">
+<style type="text/css">
+#surface{ margin:20px; border:solid 5px #CCC; }
+</style>
+<script type="text/javascript">
+var G_IE = false;
+</script>
+<!--[if IE]>
+<script src="excanvas.js"></script>
+<script type="text/javascript">
+var G_IE = true;
+</script>
+<![endif]-->
+<script src="jsgamesoup.js"></script>
+
+<script src="Array.ext.js"></script>
+<script src="Math.ext.js"></script>
+<script src="Vector2D.js"></script>
+<script src="defines.js"></script>
+<script src="Data.js"></script>
+<script src="NeuralNet.js"></script>
+<script src="Controller.js"></script>
+<script src="TrainedWeights.js"></script>
+
+<script>
+function startGame(gs) {
+		//创建
+		function RecognizeIt(){
+			this.box = [1, 1, 399, 399];
+			//创建Controller
+			this.MouseController = new Controller();
+			//开始训练
+			this.MouseController.TrainNetwork();
+			this.r = 1;
+			this.tip = 0;
+			this.update = function() {
+				this.tip++;
+				if(this.tip<=20){
+					this.r++;
+				}else{
+					this.r--;
+				}
+				if(this.tip==40) this.tip=0;
+			}
+			this.draw = function(c, gs) {
+				c.font = '12px Fixedsys';
+				this.MouseController.Render(c);
+				// draw our box
+				c.strokeStyle = 'rgba(100, 100, 100, 1.0)';
+				c.beginPath();
+				c.strokeRect(this.box[0], this.box[1], this.box[2] - this.box[0], this.box[3] - this.box[1]);
+				//c.closePath();
+				//c.strokeStyle = 'rgba(255, 0, 0, 1.0)';
+				//c.arc(90,385,this.r/2,0,Math.PI*2,true);
+				c.stroke();
+
+			}
+			// We implement this method to detect pointer/touch/mouse collisions with a polygon
+			this.pointerBox = function () {
+				return this.box;
+			}
+			
+			//左键按下，开始画图
+			this.pointerDown = function(i){
+				if(!G_IE){
+					if(i==0){
+						this.MouseController.Drawing(true);
+					}
+				}else{
+					if(i==1){
+						this.MouseController.Drawing(true);
+					}
+				}
+			}
+			//左键弹起，结束画图
+			this.pointerUp = function(i){
+				if(!G_IE){
+					if(i==0){
+						this.MouseController.Drawing(false);
+					}
+				}else{
+					if(i==1){
+						this.MouseController.Drawing(false);
+					}
+				}
+			}
+			//鼠标移动，添加点
+			this.pointerMove = function(){
+				if(this.MouseController.isDrawing){
+					//记录鼠标点 gs.pointerPosition (x,y)?
+					this.MouseController.AddPoint({x:gs.pointerPosition[0],y:gs.pointerPosition[1]});
+				}
+			}
+			//T按下训练网络
+			this.keyDown_84 = function (){
+				//this.MouseController.TrainNetwork();
+			}
+			//L按下进入学习模式
+			this.keyDown_76 = function (){
+				//this.MouseController.LearningMode();
+			}
+		}
+		gs.addEntity(new RecognizeIt());
+}
+</script>
+<canvas id="surface" jsgs="startGame" fps="30" width="400" height="400"></canvas>
+</body>
+</html>
+
